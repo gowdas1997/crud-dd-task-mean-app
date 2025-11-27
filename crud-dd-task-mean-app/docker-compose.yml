@@ -7,10 +7,8 @@ services:
     container_name: mongodb_container
     restart: always
     ports:
-      # Optional: Map the MongoDB port if you need to access it outside Docker network
       - "27017:27017"
     volumes:
-      # Use a named volume for persistent data storage
       - mongo_data:/data/db
 
   # 2. Backend Service (Node.js/Express)
@@ -21,11 +19,13 @@ services:
     container_name: backend_container
     restart: always
     ports:
-      # Map container port 3000 to host port 3000 for Nginx to proxy
-      - "3000:3000"
+      # Map container port 8080 (from server.js) to host port 8080
+      - "9090:9090"
     environment:
-      # Crucial: Use the MongoDB service name as the host
+      # Crucial: Use the MongoDB service name 'mongodb' as the host
       - MONGODB_URI=mongodb://mongodb:27017/mean-db
+      # Set the PORT environment variable to ensure server.js picks it up
+      - PORT=9090
     depends_on:
       - mongodb
 
@@ -36,7 +36,11 @@ services:
       dockerfile: Dockerfile
     container_name: frontend_container
     restart: always
-    # This service doesn't need external ports as Nginx will handle traffic on port 80
+    ports:
+      # Map frontend container port 80 to host port 8088 
+      - "8088:80"
+    depends_on:
+      - backend
 
 volumes:
   mongo_data:
