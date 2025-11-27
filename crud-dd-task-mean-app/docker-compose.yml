@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 1. MongoDB Service (Database)
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    restart: always
+    ports:
+      # Optional: Map the MongoDB port if you need to access it outside Docker network
+      - "27017:27017"
+    volumes:
+      # Use a named volume for persistent data storage
+      - mongo_data:/data/db
+
+  # 2. Backend Service (Node.js/Express)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend_container
+    restart: always
+    ports:
+      # Map container port 3000 to host port 3000 for Nginx to proxy
+      - "3000:3000"
+    environment:
+      # Crucial: Use the MongoDB service name as the host
+      - MONGODB_URI=mongodb://mongodb:27017/mean-db
+    depends_on:
+      - mongodb
+
+  # 3. Frontend Service (Angular)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend_container
+    restart: always
+    # This service doesn't need external ports as Nginx will handle traffic on port 80
+
+volumes:
+  mongo_data:
