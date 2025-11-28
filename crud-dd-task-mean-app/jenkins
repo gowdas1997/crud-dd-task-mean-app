@@ -1,0 +1,102 @@
+pipeline {
+    // Pipeline will run on any available agent
+    agent any
+
+    // Define environment variables for Docker Hub credentials and image names
+    environment {
+        // IMPORTANT: Replace 'docker-hub-id' with the Jenkins Credentials ID you set for Docker Hub
+        DOCKER_CREDENTIALS_ID = 'docker-hub-id' 
+        
+        // IMPORTANT: Replace 'YOUR_DOCKER_HUB_USERNAME' with your actual Docker Hub username
+        DOCKER_HUB_USER = 'YOUR_DOCKER_HUB_USERNAME' 
+        
+        // IMPORTANT: Replace 'remote-vm-ssh-id' with the Jenkins Credentials ID you set for the VM SSH key
+        SSH_CREDENTIALS_ID = 'remote-vm-ssh-id'
+        
+        // Final image names
+        BACKEND_IMAGE = "${DOCKER_HUB_USER}/mean-backend"
+        FRONTEND_IMAGE = "${DOCKER_HUB_USER}/mean-frontend"
+    }
+
+    stages {
+        // Stage 1: Checkout the code from GitHub
+        stage('1. Checkout Code') {
+            steps {
+                // Checkout the code from the current repository (defined in Job configuration)
+                git branch: 'main' 
+            }
+        }
+        
+        // Stage 2: Build and Tag Backend Image
+        stage('2. Build Backend Image') {
+            steps {
+                script {
+                    // Use Docker Hub credentials for building/tagging
+                    withDockerRegistry(credentialsId: env.DOCKER_CREDENTIALS_ID, url: '') {
+                        // Build the backend image using Dockerfile in the 'backend' directory
+                        sh "docker build -t ${BACKEND_IMAGE}:${BUILD_NUMBER} ./backend"
+                        sh "docker tag ${BACKEND_IMAGE}:${BUILD_NUMBER} ${BACKEND_IMAGE}:latest"
+                    }
+                }
+            }
+        }
+        
+        // Stage 3: Build and Tag Frontend Image
+        stage('3. Build Frontend Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: env.DOCKER_CREDENTIALS_ID, url: '') {
+                        // Build the frontend image using Dockerfile in the 'frontend' directory
+                        sh "docker build -t ${FRONTEND_IMAGE}:${BUILD_NUMBER} ./frontend"
+                        sh "docker tag ${FRONTEND_IMAGE}:${BUILD_NUMBER} ${FRONTEND_IMAGE}:latest"
+                    }
+                }
+            }
+        }
+        
+        // Stage 4: Push Both Images to Docker Hub
+        stage('4. Push to Docker Hub') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: env.DOCKER_CREDENTIALS_ID, url: '') {
+                        sh "docker push ${BACKEND_IMAGE}:${BUILD_NUMBER}"
+                        sh "docker push ${BACKEND_IMAGE}:latest"
+                        
+                        sh "docker push ${FRONTEND_IMAGE}:${BUILD_NUMBER}"
+                        sh "docker push ${FRONTEND_IMAGE}:latest"
+                    }
+                }
+            }
+        }
+        
+        // Stage 5: Deploy to Remote VM
+        // This stage connects to the VM, pulls the latest images, and restarts containers using docker-compose.
+        stage('5. Deploy to VM') {
+            steps {
+                script {
+                    // CRITICAL: Connect to the remote VM using SSH credentials
+                    sshagent(credentials: [env.SSH_CREDENTIALS_ID]) {
+                        // Replace 'ubuntu@YOUR_VM_PUBLIC_IP' with your actual VM login details (e.g., ubuntu@43.204.26.87)
+                        sh """
+                        ssh -o StrictHostKeyChecking=no ubuntu@YOUR_VM_PUBLIC_IP << EOF
+                            
+                            # Navigate to the project directory on the VM
+                            cd /home/ubuntu/crud-dd-task-mean-app/crud-dd-task-mean-app
+                            
+                            # Pull the latest image changes from Docker Hub
+                            sudo docker-compose pull
+                            
+                            # Recreate and start the containers in detached mode
+                            sudo docker-compose up -d --force-recreate
+                            
+                            # Restart Nginx to ensure it points to the running containers
+                            sudo systemctl restart nginx
+                            
+                        EOF
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
