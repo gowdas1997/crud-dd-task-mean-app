@@ -8,7 +8,7 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'docker-hub-id' 
         
         // IMPORTANT: Replace 'YOUR_DOCKER_HUB_USERNAME' with your actual Docker Hub username
-        DOCKER_HUB_USER = 'YOUR_DOCKER_HUB_USERNAME' 
+        DOCKER_HUB_USER = 'gowdas1997' 
         
         // IMPORTANT: Replace 'remote-vm-ssh-id' with the Jenkins Credentials ID you set for the VM SSH key
         SSH_CREDENTIALS_ID = 'remote-vm-ssh-id'
@@ -78,7 +78,7 @@ pipeline {
                     sshagent(credentials: [env.SSH_CREDENTIALS_ID]) {
                         // Replace 'ubuntu@YOUR_VM_PUBLIC_IP' with your actual VM login details (e.g., ubuntu@43.204.26.87)
                         sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@YOUR_VM_PUBLIC_IP << EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@43.204.26.87 << EOF
                             
                             # Navigate to the project directory on the VM
                             cd /home/ubuntu/crud-dd-task-mean-app/crud-dd-task-mean-app
