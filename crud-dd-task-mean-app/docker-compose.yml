@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. MongoDB Service (Database)
   mongodb:
     image: mongo:latest
     container_name: mongodb_container
@@ -11,7 +10,6 @@ services:
     volumes:
       - mongo_data:/data/db
 
-  # 2. Backend Service (Node.js/Express)
   backend:
     build:
       context: ./backend
@@ -19,17 +17,13 @@ services:
     container_name: backend_container
     restart: always
     ports:
-      # Map container port 9090 (from server.js) to host port 9090
       - "9090:9090"
     environment:
-      # Crucial: Use the MongoDB service name 'mongodb' as the host
       - MONGODB_URI=mongodb://mongodb:27017/mean-db
-      # Set the PORT environment variable to ensure server.js picks it up
       - PORT=9090
     depends_on:
       - mongodb
 
-  # 3. Frontend Service (Angular)
   frontend:
     build:
       context: ./frontend
@@ -37,10 +31,10 @@ services:
     container_name: frontend_container
     restart: always
     ports:
-      # Map frontend container port 80 to host port 8088 
       - "8088:80"
     depends_on:
       - backend
 
 volumes:
   mongo_data:
+
