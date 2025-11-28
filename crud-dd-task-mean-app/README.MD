@@ -9,6 +9,7 @@ Created a public GitHub repository.
 Cloned the repository locally and added all project files.
 Pushed the complete project structure to GitHub
 
+
 AWS VM Setup:
 Launched an Ubuntu 24.04 EC2 instance.
 Prepared VPC, subnet, and security group.
