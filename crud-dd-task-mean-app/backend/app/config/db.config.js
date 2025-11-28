@@ -1,3 +1,4 @@
 module.exports = {
-  url: "mongodb://mongodb:27017/dd_db"
+  url: "mongodb://mongodb:27017/mean-db"
 };
+
