@@ -19,7 +19,7 @@ services:
     container_name: backend_container
     restart: always
     ports:
-      # Map container port 8080 (from server.js) to host port 8080
+      # Map container port 9090 (from server.js) to host port 9090
       - "9090:9090"
     environment:
       # Crucial: Use the MongoDB service name 'mongodb' as the host

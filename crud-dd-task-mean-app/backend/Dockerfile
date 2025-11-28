@@ -11,7 +11,7 @@ FROM node:18-alpine
 WORKDIR /app
 # Copy built files from the builder stage
 COPY --from=builder /app .
-# Backend application runs on port 8080 (as per server.js)
+# Backend application runs on port 9090 (as per server.js)
 EXPOSE 9090
 # CRITICAL FIX: Run server.js directly using correct JSON array syntax
 CMD [ "node", "server.js" ]
